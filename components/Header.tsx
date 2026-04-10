@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function Header() {
   return (
@@ -8,12 +9,14 @@ export default function Header() {
         justifyContent: 'space-between', gap: 16, padding: '14px 0', flexWrap: 'wrap',
       }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 14, textDecoration: 'none', color: 'inherit' }}>
-          <div style={{
-            background: '#fff', padding: '6px 10px', borderRadius: 4,
-            fontWeight: 900, fontSize: '1rem', color: '#111', letterSpacing: '0.05em', lineHeight: 1.1,
-          }}>
-            HOBBY<br />JAPAN
-          </div>
+          <Image
+            src="/hobby-japan-logo.png"
+            alt="Hobby Japan"
+            width={80}
+            height={52}
+            style={{ display: 'block', objectFit: 'contain' }}
+            priority
+          />
           <div>
             <div style={{ fontSize: '1rem', fontWeight: 700, letterSpacing: '0.05em', color: '#c8a84b' }}>
               HOBBY JAPAN CO., LTD.
