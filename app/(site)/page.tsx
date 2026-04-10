@@ -14,10 +14,19 @@ const SERIES_COLORS: Record<string, string> = {
 
 export const revalidate = 60
 
-export default async function HomePage() {
+const ALL_SERIES = ['ALL', 'GUNDAM FORWARD', 'HJ MECHANICS', 'TECHNIQUE GUIDE', 'MODELER GUIDE', 'SCALE MODEL', "BEGINNER'S GUIDE", 'GUNDAM WEAPONS']
+
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ series?: string }>
+}) {
+  const { series: activeSeries } = await searchParams
   const books = await getAllBooks()
   const featured = books[0] ?? null
-  const rest = books.slice(1)
+  const rest = books.slice(1).filter((b) =>
+    !activeSeries || activeSeries === 'ALL' ? true : b.series === activeSeries
+  )
 
   return (
     <>
@@ -26,22 +35,31 @@ export default async function HomePage() {
       {/* Filter bar */}
       <div style={{ background: '#1a1a1a', borderBottom: '1px solid #3a3a3a', padding: '0 24px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', gap: 8, overflowX: 'auto', padding: '12px 0' }}>
-          {['ALL', 'GUNDAM FORWARD', 'HJ MECHANICS', 'TECHNIQUE GUIDE', 'MODELER GUIDE', 'SCALE MODEL'].map((s) => (
-            <span key={s} style={{
-              fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.08em',
-              padding: '4px 12px', borderRadius: 2, border: '1px solid #3a3a3a',
-              color: '#999', whiteSpace: 'nowrap', cursor: 'default',
-            }}>
-              {s}
-            </span>
-          ))}
+          {ALL_SERIES.map((s) => {
+            const isActive = s === 'ALL' ? !activeSeries || activeSeries === 'ALL' : activeSeries === s
+            return (
+              <Link
+                key={s}
+                href={s === 'ALL' ? '/' : `/?series=${encodeURIComponent(s)}`}
+                style={{
+                  fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.08em',
+                  padding: '4px 12px', borderRadius: 2, whiteSpace: 'nowrap',
+                  border: `1px solid ${isActive ? '#c8a84b' : '#3a3a3a'}`,
+                  color: isActive ? '#c8a84b' : '#999',
+                  background: isActive ? 'rgba(200,168,75,0.1)' : 'transparent',
+                }}
+              >
+                {s}
+              </Link>
+            )
+          })}
         </div>
       </div>
 
       {/* Grid */}
       <div style={{ maxWidth: 1100, margin: '40px auto 60px', padding: '0 24px' }}>
         <h2 style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.12em', color: '#999', marginBottom: 24, textTransform: 'uppercase' }}>
-          All Publications
+          {activeSeries && activeSeries !== 'ALL' ? activeSeries : 'All Publications'}
         </h2>
         <div style={{
           display: 'grid',
