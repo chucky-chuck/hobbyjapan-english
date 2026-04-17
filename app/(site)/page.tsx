@@ -1,6 +1,18 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
 import { getAllBooks, type Book } from '@/sanity/queries'
+
+export const metadata: Metadata = {
+  title: 'HOBBY JAPAN English Publications',
+  description: 'Browse the full catalog of English Gunpla and model kit books from Hobby Japan.',
+  alternates: { canonical: '/' },
+  openGraph: {
+    title: 'HOBBY JAPAN English Publications',
+    description: 'Browse the full catalog of English Gunpla and model kit books from Hobby Japan.',
+    type: 'website',
+  },
+}
 
 const SERIES_COLORS: Record<string, string> = {
   'GUNDAM FORWARD': '#c8a84b',
@@ -131,9 +143,9 @@ function HeroSection({ book }: { book: Book }) {
             )}
           </div>
         </div>
-        {book.coverUrl && (
+        {book.cover?.asset?.url && (
           <Image
-            src={book.coverUrl}
+            src={book.cover.asset.url}
             alt={book.title}
             width={200}
             height={260}
@@ -156,10 +168,10 @@ function BookCard({ book }: { book: Book }) {
         border: '1px solid #3a3a3a', transition: 'border-color 0.2s',
         height: '100%',
       }}>
-        {book.coverUrl ? (
+        {book.cover?.asset?.url ? (
           <div style={{ position: 'relative', aspectRatio: '5/7', overflow: 'hidden' }}>
             <Image
-              src={book.coverUrl}
+              src={book.cover.asset.url}
               alt={book.title}
               fill
               style={{ objectFit: 'cover' }}

@@ -14,9 +14,29 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const book = await getBook(slug)
   if (!book) return {}
+
+  const title = `${book.title} – HOBBY JAPAN`
+  const description = book.description?.substring(0, 160) ?? `${book.series} publication from Hobby Japan`
+  const coverImages = book.cover?.asset?.url
+    ? [{ url: book.cover.asset.url, alt: book.title }]
+    : undefined
+
   return {
-    title: `${book.title} – HOBBY JAPAN English Publications`,
-    description: book.description?.substring(0, 160),
+    title,
+    description,
+    alternates: { canonical: `/books/${slug}` },
+    openGraph: {
+      title,
+      description,
+      type: 'book',
+      images: coverImages,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: coverImages?.map((i) => i.url),
+    },
   }
 }
 
@@ -25,10 +45,29 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
   const book = await getBook(slug)
   if (!book) notFound()
 
-  const { prev, next } = await getAdjacentBooks(book.order ?? 0)
+  const { prev, next } = await getAdjacentBooks(book.releaseDate, book.order)
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Book',
+    name: book.title,
+    ...(book.subtitle && { alternativeHeadline: book.subtitle }),
+    ...(book.description && { description: book.description }),
+    ...(book.cover?.asset?.url && { image: book.cover.asset.url }),
+    ...(book.releaseDate && { datePublished: book.releaseDate }),
+    ...(book.amazonUrl && { url: book.amazonUrl }),
+    author: { '@type': 'Organization', name: 'Hobby Japan' },
+    publisher: { '@type': 'Organization', name: 'Hobby Japan' },
+    bookFormat: 'https://schema.org/Paperback',
+    inLanguage: 'en',
+  }
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Breadcrumb */}
       <div style={{ maxWidth: 1100, margin: '20px auto 0', padding: '0 24px', fontSize: '0.78rem', color: '#999' }}>
         <Link href="/" style={{ color: '#c8a84b' }}>Home</Link>
@@ -45,9 +84,9 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
       }}>
         {/* Cover + CTAs */}
         <div>
-          {book.coverUrl ? (
+          {book.cover?.asset?.url ? (
             <Image
-              src={book.coverUrl}
+              src={book.cover.asset.url}
               alt={book.title}
               width={260}
               height={360}
@@ -70,8 +109,8 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
                 Buy on Amazon
               </a>
             )}
-            {book.pdfUrl && (
-              <a href={book.pdfUrl} target="_blank" rel="noopener noreferrer" style={{
+            {book.pdf?.asset?.url && (
+              <a href={book.pdf.asset.url} target="_blank" rel="noopener noreferrer" style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 background: 'transparent', color: '#c8a84b', fontWeight: 600, fontSize: '0.85rem',
                 padding: '10px 0', borderRadius: 4, border: '1px solid #c8a84b',
