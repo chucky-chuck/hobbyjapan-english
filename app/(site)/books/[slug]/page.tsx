@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const book = await getBook(slug)
   if (!book) return {}
 
-  const title = `${book.title} – HOBBY JAPAN`
+  const title = book.title
   const description = book.description?.substring(0, 160) ?? `${book.series} publication from Hobby Japan`
   const coverImages = book.cover?.asset?.url
     ? [{ url: book.cover.asset.url, alt: book.title }]
@@ -62,23 +62,41 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
     inLanguage: 'en',
   }
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://english.hobbyjapan.co.jp'
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+      { '@type': 'ListItem', position: 2, name: book.series, item: `${siteUrl}/?series=${encodeURIComponent(book.series)}` },
+      { '@type': 'ListItem', position: 3, name: book.title, item: `${siteUrl}/books/${slug}` },
+    ],
+  }
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {/* Breadcrumb */}
       <div style={{ maxWidth: 1100, margin: '20px auto 0', padding: '0 24px', fontSize: '0.78rem', color: '#999' }}>
         <Link href="/" style={{ color: '#c8a84b' }}>Home</Link>
         <span style={{ margin: '0 8px' }}>›</span>
-        <span>{book.series}</span>
+        <Link href={`/?series=${encodeURIComponent(book.series)}`} style={{ color: '#c8a84b' }}>
+          {book.series}
+        </Link>
         <span style={{ margin: '0 8px' }}>›</span>
         <span style={{ color: '#e8e8e8' }}>{book.title.substring(0, 50)}{book.title.length > 50 ? '…' : ''}</span>
       </div>
 
       {/* Detail layout */}
-      <div style={{
+      <div className="detail-grid" style={{
         maxWidth: 1100, margin: '32px auto 60px', padding: '0 24px',
         display: 'grid', gridTemplateColumns: '260px 1fr', gap: 48, alignItems: 'start',
       }}>

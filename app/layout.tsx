@@ -1,8 +1,6 @@
 import type { Metadata } from 'next'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ||
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
@@ -41,6 +39,14 @@ const orgJsonLd = {
   logo: `${siteUrl}/hobby-japan-logo.png`,
 }
 
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'HOBBY JAPAN English Publications',
+  url: siteUrl,
+  description: 'Official English publications from Hobby Japan — Gunpla, model kits, and hobby guides.',
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -48,6 +54,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
         {children}
         <Analytics />

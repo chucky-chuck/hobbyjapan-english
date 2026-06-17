@@ -35,10 +35,10 @@ export default async function HomePage({
 }) {
   const { series: activeSeries } = await searchParams
   const books = await getAllBooks()
-  const featured = books[0] ?? null
-  const rest = books.slice(1).filter((b) =>
-    !activeSeries || activeSeries === 'ALL' ? true : b.series === activeSeries
-  )
+  const isAll = !activeSeries || activeSeries === 'ALL'
+  const catalog = isAll ? books : books.filter((b) => b.series === activeSeries)
+  const featured = catalog[0] ?? null
+  const gridBooks = catalog.slice(1)
 
   return (
     <>
@@ -78,8 +78,13 @@ export default async function HomePage({
           gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
           gap: 24,
         }}>
-          {rest.map((book) => <BookCard key={book._id} book={book} />)}
+          {gridBooks.map((book) => <BookCard key={book._id} book={book} />)}
         </div>
+        {gridBooks.length === 0 && !featured && (
+          <p style={{ fontSize: '0.9rem', color: '#999', textAlign: 'center', padding: '40px 0' }}>
+            No publications found in this series.
+          </p>
+        )}
       </div>
     </>
   )
@@ -92,7 +97,7 @@ function HeroSection({ book }: { book: Book }) {
       background: 'linear-gradient(135deg, #0d0d0d 0%, #1e1510 100%)',
       borderBottom: '1px solid #3a3a3a', padding: '48px 24px',
     }}>
-      <div style={{
+      <div className="hero-grid" style={{
         maxWidth: 1100, margin: '0 auto',
         display: 'grid', gridTemplateColumns: '1fr auto', gap: 40, alignItems: 'center',
       }}>
@@ -117,7 +122,9 @@ function HeroSection({ book }: { book: Book }) {
           )}
           {book.description && (
             <p style={{ fontSize: '0.9rem', color: '#999', maxWidth: 600, marginBottom: 16 }}>
-              {book.description.substring(0, 200)}…
+              {book.description.length > 200
+                ? `${book.description.substring(0, 200)}…`
+                : book.description}
             </p>
           )}
           {book.releaseDate && (
