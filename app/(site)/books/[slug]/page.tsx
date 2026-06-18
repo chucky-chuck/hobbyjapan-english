@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
-import { getAllBooks, getBook, getAdjacentBooks } from '@/sanity/queries'
+import { getAllBooks, getBook, getAdjacentBooks, getRelatedBooks } from '@/sanity/queries'
+import { formatReleaseDate, isComingSoon } from '@/lib/dates'
+import { seriesColor } from '@/lib/series'
 
 export const revalidate = 60
 
@@ -46,6 +48,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
   if (!book) notFound()
 
   const { prev, next } = await getAdjacentBooks(book.releaseDate, book.order)
+  const relatedBooks = await getRelatedBooks(book.series, slug)
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -85,7 +88,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
       {/* Breadcrumb */}
-      <div style={{ maxWidth: 1100, margin: '20px auto 0', padding: '0 24px', fontSize: '0.78rem', color: '#999' }}>
+      <div style={{ maxWidth: 1100, margin: '20px auto 0', padding: '0 24px', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
         <Link href="/" style={{ color: '#c8a84b' }}>Home</Link>
         <span style={{ margin: '0 8px' }}>›</span>
         <Link href={`/?series=${encodeURIComponent(book.series)}`} style={{ color: '#c8a84b' }}>
@@ -146,8 +149,8 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <span style={{
             display: 'inline-block', fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em',
-            color: '#c8a84b', border: '1px solid #c8a84b', padding: '3px 10px', borderRadius: 2,
-            alignSelf: 'flex-start',
+            color: seriesColor(book.series), border: `1px solid ${seriesColor(book.series)}`,
+            padding: '3px 10px', borderRadius: 2, alignSelf: 'flex-start',
           }}>
             {book.series}
           </span>
@@ -175,20 +178,61 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
           <hr style={{ border: 'none', borderTop: '1px solid #3a3a3a' }} />
 
           {book.releaseDate && (
-            <p style={{ fontSize: '0.82rem', color: '#999' }}>
-              On sale: <strong style={{ color: '#c8a84b' }}>{book.releaseDate}</strong>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+              {isComingSoon(book.releaseDate) ? (
+                <>Coming soon: <strong style={{ color: 'var(--accent-light)' }}>{formatReleaseDate(book.releaseDate)}</strong></>
+              ) : (
+                <>On sale: <strong style={{ color: 'var(--accent)' }}>{formatReleaseDate(book.releaseDate)}</strong></>
+              )}
             </p>
           )}
 
           {book.description && (
             <>
-              <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', color: '#999', textTransform: 'uppercase' }}>
+              <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                 Description
               </p>
-              <p style={{ fontSize: '0.95rem', color: '#e8e8e8', lineHeight: 1.8 }}>
+              <p style={{ fontSize: '0.95rem', color: 'var(--text)', lineHeight: 1.8 }}>
                 {book.description}
               </p>
             </>
+          )}
+
+          {relatedBooks.length > 0 && (
+            <div style={{ marginTop: 8 }}>
+              <p style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 16 }}>
+                More in {book.series}
+              </p>
+              <div className="related-books-grid">
+                {relatedBooks.map((related) => (
+                  <Link key={related._id} href={`/books/${related.slug.current}`} className="related-book-link">
+                    <div className="related-book-card">
+                      {related.cover?.asset?.url ? (
+                        <div style={{ position: 'relative', aspectRatio: '5/7', overflow: 'hidden' }}>
+                          <Image
+                            src={related.cover.asset.url}
+                            alt={related.title}
+                            fill
+                            style={{ objectFit: 'cover' }}
+                            sizes="140px"
+                          />
+                        </div>
+                      ) : (
+                        <div style={{ aspectRatio: '5/7', background: 'var(--surface2)' }} />
+                      )}
+                      <p style={{
+                        fontSize: '0.72rem', fontWeight: 700, color: 'var(--text)',
+                        lineHeight: 1.35, padding: '8px 10px',
+                        display: '-webkit-box', WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                      }}>
+                        {related.title}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -201,26 +245,28 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
       }}>
         {prev ? (
           <Link href={`/books/${prev.slug.current}`} style={{
-            fontSize: '0.8rem', color: '#c8a84b', border: '1px solid #3a3a3a',
-            padding: '8px 16px', borderRadius: 3,
+            fontSize: '0.8rem', color: 'var(--accent)', border: '1px solid var(--border)',
+            padding: '8px 16px', borderRadius: 3, maxWidth: '40%',
           }}>
+            <span style={{ display: 'block', fontSize: '0.68rem', color: 'var(--text-muted)', marginBottom: 2 }}>Newer release</span>
             ← {prev.title.substring(0, 40)}{prev.title.length > 40 ? '…' : ''}
           </Link>
         ) : (
-          <span style={{ fontSize: '0.8rem', color: '#999', border: '1px solid #3a3a3a', padding: '8px 16px', borderRadius: 3 }}>← Previous</span>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', border: '1px solid var(--border)', padding: '8px 16px', borderRadius: 3 }}>← Newer release</span>
         )}
-        <Link href="/" style={{ fontSize: '0.8rem', color: '#999', border: '1px solid #3a3a3a', padding: '8px 16px', borderRadius: 3 }}>
+        <Link href="/" style={{ fontSize: '0.8rem', color: 'var(--text-muted)', border: '1px solid var(--border)', padding: '8px 16px', borderRadius: 3 }}>
           ↑ All Publications
         </Link>
         {next ? (
           <Link href={`/books/${next.slug.current}`} style={{
-            fontSize: '0.8rem', color: '#c8a84b', border: '1px solid #3a3a3a',
-            padding: '8px 16px', borderRadius: 3,
+            fontSize: '0.8rem', color: 'var(--accent)', border: '1px solid var(--border)',
+            padding: '8px 16px', borderRadius: 3, maxWidth: '40%', textAlign: 'right',
           }}>
+            <span style={{ display: 'block', fontSize: '0.68rem', color: 'var(--text-muted)', marginBottom: 2 }}>Older release</span>
             {next.title.substring(0, 40)}{next.title.length > 40 ? '…' : ''} →
           </Link>
         ) : (
-          <span style={{ fontSize: '0.8rem', color: '#999', border: '1px solid #3a3a3a', padding: '8px 16px', borderRadius: 3 }}>Next →</span>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', border: '1px solid var(--border)', padding: '8px 16px', borderRadius: 3 }}>Older release →</span>
         )}
       </div>
 

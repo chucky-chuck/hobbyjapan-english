@@ -77,3 +77,14 @@ export async function getAdjacentBooks(
   ])
   return { prev, next }
 }
+
+export async function getRelatedBooks(
+  series: string,
+  excludeSlug: string,
+  limit = 4
+): Promise<Book[]> {
+  return client.fetch(
+    `*[_type == "book" && series == $series && slug.current != $excludeSlug] | ${SORT} [0...$limit] { ${BOOK_FIELDS} }`,
+    { series, excludeSlug, limit }
+  )
+}
