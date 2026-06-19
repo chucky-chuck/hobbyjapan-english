@@ -96,7 +96,7 @@ Do **not** add `outputDirectory`, `buildCommand`, or `installCommand` for this N
 
 Label choice: **“Japanese Site”** reads naturally on the English publications subdomain (clearer than “Corporate Site” or raw URL). Footer link still optional.
 
-### Sprint 3 — SEO & URL structure — shipped (uncommitted)
+### Sprint 3 — SEO & URL structure — shipped (commit `2a92139`)
 
 | Fix | File(s) |
 |-----|---------|
@@ -113,32 +113,44 @@ Label choice: **“Japanese Site”** reads naturally on the English publication
 
 **Per-book OG images:** already wired in book `generateMetadata` (cover from Sanity CDN).
 
+### Sprint 4 — Code quality & features — shipped (uncommitted)
+
+| Fix | File(s) |
+|-----|---------|
+| Shared `getSiteUrl()` / `PRODUCTION_SITE_URL` | `lib/site.ts`; used in layout, robots, sitemap, llms.txt, book JSON-LD |
+| `loading.tsx` skeleton while catalog loads | `app/(site)/loading.tsx`, `app/globals.css` |
+| `error.tsx` with retry + home link | `app/(site)/error.tsx` |
+| Client-side catalog search (title, series, subtitle, description) | `components/CatalogInteractive.tsx` |
+| Vercel Analytics custom events for Amazon + PDF clicks | `components/TrackOutboundLink.tsx`, hero + book detail |
+| Catalog UI split: server shell + client interactivity | `components/CatalogView.tsx` → `CatalogInteractive.tsx` |
+
+**Not in this sprint:** full CSS refactor (Tailwind/modules), Sanity preview/draft mode, optional About page.
+
 ---
 
 ## Remaining improvement plan
 
-Prioritized from the original site analysis. Sprints 1–3 are done; continue from Sprint 4.
+Prioritized from the original site analysis. Sprints 1–4 core items are done.
 
-### Sprint 3 — SEO & URL structure — **done** (see above)
+### Sprint 4 — Code quality & features — **done** (see above)
 
 | Task | Status |
 |------|--------|
-| Clean series routes | Done — `/series/gundam-forward` etc. |
-| Per-series metadata | Done |
-| Per-book OG images | Already done (book `generateMetadata`) |
-| Link to corporate site | Header done; footer optional |
-| Optional About page | Not started |
+| Shared `lib/site.ts` | Done |
+| `loading.tsx` / `error.tsx` | Done — `(site)` route group |
+| Search | Done — client-side catalog search |
+| Analytics events | Done — `Amazon Click`, `PDF Download` via `@vercel/analytics` |
+| CSS refactor | Not started (large scope; defer) |
+| Sanity preview / draft mode | Not started |
 
-### Sprint 4 — Code quality & features (recommended next)
+### Future / optional
 
 | Task | Details |
 |------|---------|
-| CSS refactor | Move inline styles → CSS modules or Tailwind for maintainability |
-| Shared `lib/site.ts` | Deduplicate `siteUrl` (repeated in 5+ files) |
-| `loading.tsx` / `error.tsx` | For Sanity fetch failures |
-| Search | Client-side title/series filter, or remove SearchAction if not implementing (already removed from JSON-LD) |
-| Analytics events | Track Amazon clicks, PDF downloads via Vercel Analytics or custom events |
+| CSS refactor | Move inline styles → CSS modules or Tailwind |
 | Sanity preview / draft mode | For editors |
+| About page | Short explainer for English line |
+| Footer corporate link | Duplicate of header Japanese Site link |
 
 ---
 
@@ -151,6 +163,8 @@ app/
     layout.tsx            # Skip link, Header + main#main-content + Footer
     page.tsx              # Homepage: all publications (no query params)
     series/[slug]/page.tsx # Per-series catalog + metadata
+    loading.tsx           # Catalog skeleton
+    error.tsx             # Sanity/fetch error boundary with retry
     not-found.tsx         # 404 with site chrome
     books/[slug]/page.tsx # Book detail + metadata + JSON-LD + related books
   not-found.tsx           # Fallback 404 (routes outside (site))
@@ -159,11 +173,13 @@ app/
 components/
   Header.tsx              # Logo, Japanese Site link, social icons
   Footer.tsx
+  CatalogView.tsx         # Server wrapper for catalog pages
+  CatalogInteractive.tsx  # Client catalog: search, hero, filter, grid
+  TrackOutboundLink.tsx   # Outbound links with Vercel Analytics events
 lib/
+  site.ts                 # getSiteUrl(), PRODUCTION_SITE_URL
   series.ts               # ALL_SERIES, SERIES_COLORS, SERIES_DESCRIPTIONS, seriesSlug/Path/FromSlug
   dates.ts                # formatReleaseDate(), isComingSoon()
-components/
-  CatalogView.tsx         # Shared hero, filter bar, publication grid
 sanity/
   queries.ts              # getAllBooks, getBook, getAdjacentBooks, getRelatedBooks
   schemas/book.ts         # CMS schema
@@ -250,6 +266,7 @@ After any deploy, verify:
 - [ ] Breadcrumb “HJ MECHANICS” is clickable → `/series/hj-mechanics`
 - [ ] `/books/nonexistent-slug` → 404 page with header/footer (HTTP 404, not redirect)
 - [ ] Amazon + PDF links work on a book with those fields
+- [ ] Catalog search filters publications by title (e.g. "0080")
 - [ ] `/studio` still loads for editors
 - [ ] Grid cards show formatted release dates; hover/focus states work
 - [ ] Book detail shows “More in {series}” related books when applicable
@@ -263,7 +280,7 @@ After any deploy, verify:
 
 The site was analyzed live at `http://localhost:3000` and via codebase review. Overall assessment: **solid foundation** (Sanity, SEO basics, `llms.txt`, OG image, analytics) with **URL structure and deeper SEO** as the main remaining gaps. Sprint 1 fixed confusing bugs (filter/hero mismatch, SEO inconsistencies, 404 behavior). Sprint 2 added UX polish and accessibility.
 
-**Suggested next action for the next agent:** Start Sprint 4 — `lib/site.ts` for `siteUrl`, `loading.tsx` / `error.tsx`, or optional About page.
+**Suggested next action for the next agent:** Optional About page, Sanity preview/draft mode, or CSS refactor — otherwise site improvement backlog is largely complete.
 
 ---
 
