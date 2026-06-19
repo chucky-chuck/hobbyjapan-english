@@ -3,7 +3,7 @@ import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { getAllBooks, getBook, getAdjacentBooks, getRelatedBooks } from '@/sanity/queries'
 import { formatReleaseDate, isComingSoon } from '@/lib/dates'
-import { seriesColor } from '@/lib/series'
+import { seriesColor, seriesPath } from '@/lib/series'
 
 export const revalidate = 60
 
@@ -72,7 +72,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
-      { '@type': 'ListItem', position: 2, name: book.series, item: `${siteUrl}/?series=${encodeURIComponent(book.series)}` },
+      { '@type': 'ListItem', position: 2, name: book.series, item: `${siteUrl}${seriesPath(book.series)}` },
       { '@type': 'ListItem', position: 3, name: book.title, item: `${siteUrl}/books/${slug}` },
     ],
   }
@@ -91,7 +91,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
       <div style={{ maxWidth: 1100, margin: '20px auto 0', padding: '0 24px', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
         <Link href="/" style={{ color: '#c8a84b' }}>Home</Link>
         <span style={{ margin: '0 8px' }}>›</span>
-        <Link href={`/?series=${encodeURIComponent(book.series)}`} style={{ color: '#c8a84b' }}>
+        <Link href={seriesPath(book.series)} style={{ color: '#c8a84b' }}>
           {book.series}
         </Link>
         <span style={{ margin: '0 8px' }}>›</span>

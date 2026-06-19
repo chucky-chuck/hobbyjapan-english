@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { getAllBooks } from '@/sanity/queries'
+import { ALL_SERIES, seriesPath } from '@/lib/series'
 
 export const revalidate = 3600
 
@@ -16,6 +17,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }))
 
+  const seriesEntries: MetadataRoute.Sitemap = ALL_SERIES.map((series) => ({
+    url: `${siteUrl}${seriesPath(series)}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.9,
+  }))
+
   return [
     {
       url: siteUrl,
@@ -23,6 +31,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'daily',
       priority: 1,
     },
+    ...seriesEntries,
     ...bookEntries,
   ]
 }

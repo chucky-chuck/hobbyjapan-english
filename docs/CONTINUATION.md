@@ -1,6 +1,6 @@
 # Hobby Japan English Site — Agent Handoff
 
-**Last updated:** 2026-06-18  
+**Last updated:** 2026-06-19  
 **Purpose:** Let a future agent/session continue the site improvement work without re-discovering context.
 
 ---
@@ -96,23 +96,40 @@ Do **not** add `outputDirectory`, `buildCommand`, or `installCommand` for this N
 
 Label choice: **“Japanese Site”** reads naturally on the English publications subdomain (clearer than “Corporate Site” or raw URL). Footer link still optional.
 
+### Sprint 3 — SEO & URL structure — shipped (uncommitted)
+
+| Fix | File(s) |
+|-----|---------|
+| Clean series routes `/series/gundam-forward` (replaces `/?series=…`) | `app/(site)/series/[slug]/page.tsx`, `lib/series.ts` |
+| Per-series metadata (title, description, canonical, OG/Twitter) | `app/(site)/series/[slug]/page.tsx` |
+| Shared catalog UI extracted from homepage | `components/CatalogView.tsx`, `app/(site)/page.tsx` |
+| Legacy `/?series=` → `/series/…` 301 redirects | `next.config.ts` |
+| Breadcrumb + JSON-LD series links use `/series/…` | `app/(site)/books/[slug]/page.tsx` |
+| Sitemap includes all series pages | `app/sitemap.ts` |
+| `llms.txt` series sections link to series URLs | `app/llms.txt/route.ts` |
+| Centralized `ALL_SERIES`, slugs, descriptions in `lib/series.ts` | `lib/series.ts` |
+
+**New helpers in `lib/series.ts`:** `ALL_SERIES`, `SERIES_DESCRIPTIONS`, `seriesSlug()`, `seriesFromSlug()`, `seriesPath()`
+
+**Per-book OG images:** already wired in book `generateMetadata` (cover from Sanity CDN).
+
 ---
 
 ## Remaining improvement plan
 
-Prioritized from the original site analysis. Sprints 1–2 are done; continue from Sprint 3.
+Prioritized from the original site analysis. Sprints 1–3 are done; continue from Sprint 4.
 
-### Sprint 3 — SEO & URL structure (recommended next)
+### Sprint 3 — SEO & URL structure — **done** (see above)
 
-| Task | Details |
-|------|---------|
-| Clean series routes | Replace `/?series=GUNDAM%20FORWARD` with `/series/gundam-forward` |
-| Per-series metadata | Title, description, canonical per series page |
-| Per-book OG images | Homepage OG is generic; book metadata already supports cover images |
-| Link to corporate site | ~~`hobbyjapan.co.jp` in header~~ — **done** in header (`6e97d6b`); optional duplicate in footer |
-| Optional About page | Short explainer for English line |
+| Task | Status |
+|------|--------|
+| Clean series routes | Done — `/series/gundam-forward` etc. |
+| Per-series metadata | Done |
+| Per-book OG images | Already done (book `generateMetadata`) |
+| Link to corporate site | Header done; footer optional |
+| Optional About page | Not started |
 
-### Sprint 4 — Code quality & features
+### Sprint 4 — Code quality & features (recommended next)
 
 | Task | Details |
 |------|---------|
@@ -132,7 +149,8 @@ app/
   layout.tsx              # Root metadata, org + website JSON-LD, Analytics
   (site)/
     layout.tsx            # Skip link, Header + main#main-content + Footer
-    page.tsx              # Homepage: hero, filter, grid
+    page.tsx              # Homepage: all publications (no query params)
+    series/[slug]/page.tsx # Per-series catalog + metadata
     not-found.tsx         # 404 with site chrome
     books/[slug]/page.tsx # Book detail + metadata + JSON-LD + related books
   not-found.tsx           # Fallback 404 (routes outside (site))
@@ -142,8 +160,10 @@ components/
   Header.tsx              # Logo, Japanese Site link, social icons
   Footer.tsx
 lib/
-  series.ts               # SERIES_COLORS, seriesColor()
+  series.ts               # ALL_SERIES, SERIES_COLORS, SERIES_DESCRIPTIONS, seriesSlug/Path/FromSlug
   dates.ts                # formatReleaseDate(), isComingSoon()
+components/
+  CatalogView.tsx         # Shared hero, filter bar, publication grid
 sanity/
   queries.ts              # getAllBooks, getBook, getAdjacentBooks, getRelatedBooks
   schemas/book.ts         # CMS schema
@@ -224,9 +244,10 @@ git push origin master # triggers Vercel auto-deploy
 After any deploy, verify:
 
 - [ ] https://english.hobbyjapan.co.jp/ loads
-- [ ] `/?series=GUNDAM%20FORWARD` → hero shows **IBO 10th Anniversary** (GUNDAM FORWARD), not 0080
+- [ ] `/series/gundam-forward` → hero shows **IBO 10th Anniversary** (GUNDAM FORWARD), not 0080
+- [ ] `/?series=GUNDAM%20FORWARD` 301 → `/series/gundam-forward`
 - [ ] `/books/war-in-the-pocket` → title `… \| HOBBY JAPAN` (single suffix)
-- [ ] Breadcrumb “HJ MECHANICS” is clickable → filtered catalog
+- [ ] Breadcrumb “HJ MECHANICS” is clickable → `/series/hj-mechanics`
 - [ ] `/books/nonexistent-slug` → 404 page with header/footer (HTTP 404, not redirect)
 - [ ] Amazon + PDF links work on a book with those fields
 - [ ] `/studio` still loads for editors
@@ -242,7 +263,7 @@ After any deploy, verify:
 
 The site was analyzed live at `http://localhost:3000` and via codebase review. Overall assessment: **solid foundation** (Sanity, SEO basics, `llms.txt`, OG image, analytics) with **URL structure and deeper SEO** as the main remaining gaps. Sprint 1 fixed confusing bugs (filter/hero mismatch, SEO inconsistencies, 404 behavior). Sprint 2 added UX polish and accessibility.
 
-**Suggested next action for the next agent:** Start Sprint 3 — clean series routes (`/series/gundam-forward`) with per-series metadata and canonical URLs.
+**Suggested next action for the next agent:** Start Sprint 4 — `lib/site.ts` for `siteUrl`, `loading.tsx` / `error.tsx`, or optional About page.
 
 ---
 
