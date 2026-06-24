@@ -66,8 +66,48 @@ export const bookSchema = defineType({
     }),
     defineField({
       name: 'amazonUrl',
-      title: 'Amazon URL',
+      title: 'Amazon URL (US)',
       type: 'url',
+      description: 'Legacy US link — kept in sync with the US entry in Amazon Links',
+    }),
+    defineField({
+      name: 'amazonLinks',
+      title: 'Amazon Links',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            defineField({
+              name: 'region',
+              title: 'Region',
+              type: 'string',
+              options: {
+                list: [
+                  { title: 'United States', value: 'US' },
+                  { title: 'United Kingdom', value: 'UK' },
+                  { title: 'Canada', value: 'CA' },
+                  { title: 'Germany', value: 'DE' },
+                  { title: 'France', value: 'FR' },
+                  { title: 'Italy', value: 'IT' },
+                  { title: 'Spain', value: 'ES' },
+                  { title: 'Netherlands', value: 'NL' },
+                ],
+              },
+              validation: (r) => r.required(),
+            }),
+            defineField({
+              name: 'url',
+              title: 'URL',
+              type: 'url',
+              validation: (r) => r.required(),
+            }),
+          ],
+          preview: {
+            select: { title: 'region', subtitle: 'url' },
+          },
+        },
+      ],
     }),
     defineField({
       name: 'pdf',

@@ -5,7 +5,9 @@ import { getAllBooks, getBook, getAdjacentBooks, getRelatedBooks } from '@/sanit
 import { formatReleaseDate, isComingSoon } from '@/lib/dates'
 import { seriesColor, seriesPath } from '@/lib/series'
 import { getSiteUrl } from '@/lib/site'
+import { primaryAmazonUrl, resolveAmazonLinks } from '@/lib/amazon'
 import { TrackOutboundLink } from '@/components/TrackOutboundLink'
+import { AmazonBuyLinks } from '@/components/AmazonBuyLinks'
 
 export const revalidate = 60
 
@@ -52,6 +54,9 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
   const { prev, next } = await getAdjacentBooks(book.releaseDate, book.order)
   const relatedBooks = await getRelatedBooks(book.series, slug)
 
+  const amazonLinks = resolveAmazonLinks(book.amazonLinks, book.amazonUrl)
+  const amazonUrl = primaryAmazonUrl(book.amazonLinks, book.amazonUrl)
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Book',
@@ -60,7 +65,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
     ...(book.description && { description: book.description }),
     ...(book.cover?.asset?.url && { image: book.cover.asset.url }),
     ...(book.releaseDate && { datePublished: book.releaseDate }),
-    ...(book.amazonUrl && { url: book.amazonUrl }),
+    ...(amazonUrl && { url: amazonUrl }),
     author: { '@type': 'Organization', name: 'Hobby Japan' },
     publisher: { '@type': 'Organization', name: 'Hobby Japan' },
     bookFormat: 'https://schema.org/Paperback',
@@ -120,24 +125,13 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
             <div style={{ aspectRatio: '5/7', background: '#2e2e2e', borderRadius: 6 }} />
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 20 }}>
-            {book.amazonUrl && (
-              <TrackOutboundLink
-                href={book.amazonUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                event="Amazon Click"
-                eventData={{ slug, series: book.series, location: 'detail' }}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  background: '#ff9900', color: '#111', fontWeight: 700, fontSize: '0.88rem',
-                  padding: '11px 0', borderRadius: 4,
-                }}
-              >
-                <svg viewBox="0 0 24 24" width={18} height={18} fill="#111">
-                  <path d="M.045 18.02c.072-.116.187-.124.348-.022 3.636 2.11 7.594 3.166 11.87 3.166 2.852 0 5.668-.533 8.447-1.595l.315-.14c.138-.06.234-.1.293-.13.226-.088.39-.046.493.124.104.17.08.338-.07.505-.966 1.226-2.174 2.173-3.617 2.847-1.45.67-2.957 1.007-4.525 1.007-3.015 0-5.72-.897-8.116-2.695l-.314-.262c-.18-.15-.214-.29-.114-.42l.19-.385zM12.73 4.15c.065.065.065.13 0 .195-.1.074-.196.048-.284-.08C11.62 3.1 10.44 2.44 9.007 2.1c-.23-.055-.33-.14-.305-.264.024-.123.14-.172.35-.15 1.634.19 2.986.88 4.054 2.07l-.38.393zM5.17 4.15c-.066.065-.066.13 0 .195.1.074.196.048.284-.08C6.28 3.1 7.46 2.44 8.893 2.1c.23-.055.33-.14.305-.264-.024-.123-.14-.172-.35-.15-1.634.19-2.986.88-4.054 2.07l.38.393z" />
-                </svg>
-                Buy on Amazon
-              </TrackOutboundLink>
+            {amazonLinks.length > 0 && (
+              <AmazonBuyLinks
+                links={amazonLinks}
+                slug={slug}
+                series={book.series}
+                location="detail"
+              />
             )}
             {book.pdf?.asset?.url && (
               <TrackOutboundLink

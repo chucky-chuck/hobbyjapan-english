@@ -10,7 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "migrate": "node scripts/migrate.mjs"
+    "migrate": "node scripts/migrate.mjs",
+    "patch-amazon-links": "node scripts/patch-amazon-links.mjs"
   },
   "dependencies": {
     "@sanity/image-url": "^1.1.0",

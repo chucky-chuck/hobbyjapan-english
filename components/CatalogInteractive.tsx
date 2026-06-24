@@ -6,7 +6,9 @@ import Image from 'next/image'
 import { type Book } from '@/sanity/queries'
 import { ALL_SERIES, seriesColor, seriesPath } from '@/lib/series'
 import { formatReleaseDate, isComingSoon } from '@/lib/dates'
+import { primaryAmazonUrl, resolveAmazonLinks } from '@/lib/amazon'
 import { TrackOutboundLink } from '@/components/TrackOutboundLink'
+import { AmazonBuyLinks } from '@/components/AmazonBuyLinks'
 
 type CatalogInteractiveProps = {
   books: Book[]
@@ -121,6 +123,8 @@ function ReleaseDateLine({ releaseDate }: { releaseDate: string }) {
 
 function HeroSection({ book }: { book: Book }) {
   const slug = book.slug.current
+  const amazonLinks = resolveAmazonLinks(book.amazonLinks, book.amazonUrl)
+  const amazonUrl = primaryAmazonUrl(book.amazonLinks, book.amazonUrl)
   return (
     <div style={{
       background: 'linear-gradient(135deg, #0d0d0d 0%, #1e1510 100%)',
@@ -172,9 +176,16 @@ function HeroSection({ book }: { book: Book }) {
             }}>
               View Details
             </Link>
-            {book.amazonUrl && (
+            {amazonLinks.length > 1 ? (
+              <AmazonBuyLinks
+                links={amazonLinks}
+                slug={slug}
+                series={book.series}
+                location="hero"
+              />
+            ) : amazonUrl ? (
               <TrackOutboundLink
-                href={book.amazonUrl}
+                href={amazonUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 event="Amazon Click"
@@ -187,7 +198,7 @@ function HeroSection({ book }: { book: Book }) {
               >
                 Buy on Amazon
               </TrackOutboundLink>
-            )}
+            ) : null}
           </div>
         </div>
         {book.cover?.asset?.url && (

@@ -1,4 +1,5 @@
 import { client } from './client'
+import type { AmazonLink } from '@/lib/amazon'
 
 export type Book = {
   _id: string
@@ -11,6 +12,7 @@ export type Book = {
   releaseDate?: string
   cover?: { asset: { url: string } }
   amazonUrl?: string
+  amazonLinks?: AmazonLink[]
   pdf?: { asset: { url: string } }
   description?: string
   order?: number // legacy field — still in data, used as tiebreaker for undated books
@@ -27,6 +29,7 @@ const BOOK_FIELDS = `
   releaseDate,
   cover { asset->{ url } },
   amazonUrl,
+  amazonLinks[] { region, url },
   pdf { asset->{ url } },
   description,
   order
