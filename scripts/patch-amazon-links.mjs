@@ -42,6 +42,15 @@ function readExcelRows(xlsxPath) {
   return JSON.parse(output)
 }
 
+function amazonLinksWithKeys(links) {
+  return links.map((link) => ({
+    _type: 'amazonLink',
+    _key: `amazon-${link.region.toLowerCase()}`,
+    region: link.region,
+    url: link.url,
+  }))
+}
+
 async function patchAmazonLinks() {
   const xlsxPath = process.argv[2] || DEFAULT_XLSX
   const rows = readExcelRows(xlsxPath)
@@ -65,7 +74,7 @@ async function patchAmazonLinks() {
     await client
       .patch(book._id)
       .set({
-        amazonLinks: row.amazonLinks,
+        amazonLinks: amazonLinksWithKeys(row.amazonLinks),
         ...(usLink ? { amazonUrl: usLink } : {}),
       })
       .commit()

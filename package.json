@@ -11,7 +11,8 @@
     "start": "next start",
     "lint": "next lint",
     "migrate": "node scripts/migrate.mjs",
-    "patch-amazon-links": "node scripts/patch-amazon-links.mjs"
+    "patch-amazon-links": "node scripts/patch-amazon-links.mjs",
+    "fix-sanity-warnings": "node scripts/fix-sanity-warnings.mjs"
   },
   "dependencies": {
     "@sanity/image-url": "^1.1.0",

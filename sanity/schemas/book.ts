@@ -77,6 +77,7 @@ export const bookSchema = defineType({
       of: [
         {
           type: 'object',
+          name: 'amazonLink',
           fields: [
             defineField({
               name: 'region',
@@ -120,6 +121,14 @@ export const bookSchema = defineType({
       title: 'Description',
       type: 'text',
       rows: 6,
+    }),
+    defineField({
+      name: 'order',
+      title: 'Legacy Order',
+      type: 'number',
+      hidden: true,
+      readOnly: true,
+      description: 'Legacy sort index from migration. Books are sorted by release date; this field is kept for older data only.',
     }),
   ],
   preview: {
