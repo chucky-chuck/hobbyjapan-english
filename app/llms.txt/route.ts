@@ -1,4 +1,5 @@
-import { getAllBooks } from '@/sanity/queries'
+import { getAllBooks, getIncomingBooks } from '@/sanity/queries'
+import { formatReleaseDate } from '@/lib/dates'
 import { SERIES_DESCRIPTIONS, seriesPath } from '@/lib/series'
 import { getSiteUrl } from '@/lib/site'
 
@@ -7,13 +8,23 @@ export const revalidate = 3600
 const siteUrl = getSiteUrl()
 
 export async function GET() {
-  const books = await getAllBooks()
+  const [books, incomingBooks] = await Promise.all([getAllBooks(), getIncomingBooks()])
 
   const bySeriesMap = new Map<string, typeof books>()
   for (const book of books) {
     if (!bySeriesMap.has(book.series)) bySeriesMap.set(book.series, [])
     bySeriesMap.get(book.series)!.push(book)
   }
+
+  const incomingSection =
+    incomingBooks.length > 0
+      ? `## [Incoming Publications](${siteUrl}/incoming)\n\nUpcoming English releases before they go on sale.\n\n${incomingBooks
+          .map((b) => {
+            const date = b.releaseDate ? formatReleaseDate(b.releaseDate) : 'Release date TBA'
+            return `- [${b.title}](${siteUrl}/books/${b.slug.current}) (${b.series}, ${date})`
+          })
+          .join('\n')}`
+      : ''
 
   const seriesSections = [...bySeriesMap.entries()].map(([series, seriesBooks]) => {
     const desc = SERIES_DESCRIPTIONS[series] ?? ''
@@ -34,9 +45,10 @@ Hobby Japan is a Japanese publisher specializing in model kits, Gunpla, and hobb
 ## Key URLs
 
 - [Full catalogue](${siteUrl}/)
+- [Incoming publications](${siteUrl}/incoming)
 - [Sitemap](${siteUrl}/sitemap.xml)
 
-${seriesSections.join('\n\n')}
+${incomingSection ? `${incomingSection}\n\n` : ''}${seriesSections.join('\n\n')}
 `
 
   return new Response(text, {

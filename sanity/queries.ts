@@ -1,5 +1,6 @@
 import { client } from './client'
 import type { AmazonLink } from '@/lib/amazon'
+import { todayIsoDate } from '@/lib/dates'
 
 export type Book = {
   _id: string
@@ -9,6 +10,7 @@ export type Book = {
   subtitle?: string
   isNew?: boolean
   pinned?: boolean
+  isIncoming?: boolean
   releaseDate?: string
   cover?: { asset: { url: string } }
   amazonUrl?: string
@@ -26,6 +28,7 @@ const BOOK_FIELDS = `
   subtitle,
   isNew,
   pinned,
+  isIncoming,
   releaseDate,
   cover { asset->{ url } },
   amazonUrl,
@@ -40,6 +43,14 @@ const SORT = `order(coalesce(pinned, false) desc, releaseDate desc, order asc, _
 
 export async function getAllBooks(): Promise<Book[]> {
   return client.fetch(`*[_type == "book"] | ${SORT} { ${BOOK_FIELDS} }`)
+}
+
+export async function getIncomingBooks(): Promise<Book[]> {
+  const today = todayIsoDate()
+  return client.fetch(
+    `*[_type == "book" && (isIncoming == true || releaseDate > $today)] | order(releaseDate asc, title asc) { ${BOOK_FIELDS} }`,
+    { today },
+  )
 }
 
 export async function getBook(slug: string): Promise<Book | null> {

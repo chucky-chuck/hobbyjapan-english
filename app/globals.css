@@ -342,3 +342,264 @@ a { color: inherit; text-decoration: none; }
   outline: 2px solid #fff;
   outline-offset: 2px;
 }
+
+/* Incoming publications */
+.badge-incoming {
+  display: inline-block;
+  background: transparent;
+  color: var(--accent-light);
+  border: 1px solid var(--accent);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 3px 10px;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+
+.badge-incoming--compact {
+  font-size: 0.62rem;
+  padding: 2px 7px;
+}
+
+.incoming-section {
+  background: linear-gradient(180deg, #141414 0%, var(--bg) 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 32px 0 28px;
+}
+
+.incoming-section-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.incoming-section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.incoming-section-view-all {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+
+.incoming-section-view-all:hover,
+.incoming-section-view-all:focus-visible {
+  color: var(--accent-light);
+}
+
+.incoming-section-view-all:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.incoming-section-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.incoming-section-subtitle {
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+.incoming-scroll {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.incoming-card-link {
+  flex: 0 0 200px;
+}
+
+.incoming-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.incoming-card-link:hover .incoming-card,
+.incoming-card-link:focus-visible .incoming-card {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.incoming-card-cover {
+  position: relative;
+  aspect-ratio: 5 / 7;
+  overflow: hidden;
+  background: var(--surface2);
+}
+
+.incoming-card-cover--empty {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 8px;
+}
+
+.incoming-card-cover .badge-incoming {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 1;
+}
+
+.incoming-card-body {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.incoming-card-series {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.incoming-card-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.incoming-card-date {
+  font-size: 0.68rem;
+  color: var(--accent-light);
+  margin-top: auto;
+}
+
+.book-card--incoming {
+  border-color: rgba(200, 168, 75, 0.35);
+}
+
+.book-card-link--incoming:hover .book-card--incoming,
+.book-card-link--incoming:focus-visible .book-card--incoming {
+  border-color: var(--accent);
+}
+
+.incoming-detail-notice {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 12px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: rgba(200, 168, 75, 0.08);
+  line-height: 1.5;
+}
+
+.incoming-detail-notice strong {
+  color: var(--accent-light);
+}
+
+.incoming-page {
+  padding: 24px 0 60px;
+}
+
+.incoming-page-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.incoming-page-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.incoming-page-breadcrumb a {
+  color: var(--accent);
+}
+
+.incoming-page-breadcrumb a:hover,
+.incoming-page-breadcrumb a:focus-visible {
+  color: var(--accent-light);
+}
+
+.incoming-page-header {
+  margin-bottom: 32px;
+}
+
+.incoming-page-title {
+  font-size: clamp(1.6rem, 4vw, 2rem);
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.incoming-page-description {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  max-width: 640px;
+  line-height: 1.6;
+}
+
+.incoming-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 24px;
+}
+
+.incoming-grid .incoming-card-link {
+  flex: unset;
+}
+
+.incoming-page-empty {
+  text-align: center;
+  padding: 48px 0;
+  color: var(--text-muted);
+}
+
+.incoming-page-empty p {
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+}
+
+.incoming-page-back-link {
+  display: inline-block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #111;
+  background: var(--accent);
+  padding: 10px 22px;
+  border-radius: 3px;
+}
+
+.incoming-page-back-link:hover,
+.incoming-page-back-link:focus-visible {
+  filter: brightness(1.08);
+}

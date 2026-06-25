@@ -59,6 +59,14 @@ export const bookSchema = defineType({
       type: 'date',
     }),
     defineField({
+      name: 'isIncoming',
+      title: 'Incoming Publication',
+      type: 'boolean',
+      initialValue: false,
+      description:
+        'Show as an incoming title before release. Also set automatically when Release Date is in the future.',
+    }),
+    defineField({
       name: 'cover',
       title: 'Cover Image',
       type: 'image',

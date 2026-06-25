@@ -5,14 +5,17 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { type Book } from '@/sanity/queries'
 import { ALL_SERIES, seriesColor, seriesPath } from '@/lib/series'
-import { formatReleaseDate, isComingSoon } from '@/lib/dates'
+import { formatReleaseDate, isIncoming, pickFeaturedBook } from '@/lib/dates'
 import { primaryAmazonUrl, resolveAmazonLinks } from '@/lib/amazon'
 import { TrackOutboundLink } from '@/components/TrackOutboundLink'
 import { AmazonBuyLinks } from '@/components/AmazonBuyLinks'
+import { IncomingSection } from '@/components/IncomingSection'
+import { IncomingBadge } from '@/components/IncomingBadge'
 
 type CatalogInteractiveProps = {
   books: Book[]
   activeSeries: string | null
+  incomingBooks?: Book[]
 }
 
 function matchesQuery(book: Book, query: string): boolean {
@@ -25,7 +28,7 @@ function matchesQuery(book: Book, query: string): boolean {
   return haystack.includes(q)
 }
 
-export function CatalogInteractive({ books, activeSeries }: CatalogInteractiveProps) {
+export function CatalogInteractive({ books, activeSeries, incomingBooks = [] }: CatalogInteractiveProps) {
   const [query, setQuery] = useState('')
   const isAll = !activeSeries
   const catalog = useMemo(
@@ -39,12 +42,19 @@ export function CatalogInteractive({ books, activeSeries }: CatalogInteractivePr
       const filtered = catalog.filter((b) => matchesQuery(b, query))
       return { featured: null, gridBooks: filtered }
     }
-    return { featured: catalog[0] ?? null, gridBooks: catalog.slice(1) }
+    const featuredBook = pickFeaturedBook(catalog)
+    const rest = featuredBook
+      ? catalog.filter((b) => b._id !== featuredBook._id)
+      : catalog
+    return { featured: featuredBook, gridBooks: rest }
   }, [catalog, isSearching, query])
+
+  const showIncomingSection = isAll && !isSearching && incomingBooks.length > 0
 
   return (
     <>
       {featured && <HeroSection book={featured} />}
+      {showIncomingSection && <IncomingSection books={incomingBooks} />}
 
       <div className="filter-bar">
         <div className="filter-bar-inner">
@@ -108,23 +118,32 @@ export function CatalogInteractive({ books, activeSeries }: CatalogInteractivePr
   )
 }
 
-function ReleaseDateLine({ releaseDate }: { releaseDate: string }) {
-  const comingSoon = isComingSoon(releaseDate)
+function ReleaseDateLine({ book }: { book: Book }) {
+  if (isIncoming(book)) {
+    return (
+      <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 6 }}>
+        {book.releaseDate ? (
+          <>Coming soon: <strong style={{ color: 'var(--accent-light)' }}>{formatReleaseDate(book.releaseDate)}</strong></>
+        ) : (
+          <>Release date <strong style={{ color: 'var(--accent-light)' }}>TBA</strong></>
+        )}
+      </p>
+    )
+  }
+  if (!book.releaseDate) return null
   return (
     <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 6 }}>
-      {comingSoon ? (
-        <>Coming soon: <strong style={{ color: 'var(--accent-light)' }}>{formatReleaseDate(releaseDate)}</strong></>
-      ) : (
-        <>On sale: <strong style={{ color: 'var(--accent)' }}>{formatReleaseDate(releaseDate)}</strong></>
-      )}
+      On sale: <strong style={{ color: 'var(--accent)' }}>{formatReleaseDate(book.releaseDate)}</strong>
     </p>
   )
 }
 
 function HeroSection({ book }: { book: Book }) {
   const slug = book.slug.current
+  const incoming = isIncoming(book)
   const amazonLinks = resolveAmazonLinks(book.amazonLinks, book.amazonUrl)
   const amazonUrl = primaryAmazonUrl(book.amazonLinks, book.amazonUrl)
+  const showAmazon = !incoming && (amazonLinks.length > 0 || amazonUrl)
   return (
     <div style={{
       background: 'linear-gradient(135deg, #0d0d0d 0%, #1e1510 100%)',
@@ -135,13 +154,17 @@ function HeroSection({ book }: { book: Book }) {
         display: 'grid', gridTemplateColumns: '1fr auto', gap: 40, alignItems: 'center',
       }}>
         <div>
-          {book.isNew && (
+          {incoming ? (
+            <div style={{ marginBottom: 12 }}>
+              <IncomingBadge />
+            </div>
+          ) : book.isNew ? (
             <span style={{
               display: 'inline-block', background: 'var(--red)', color: '#fff',
               fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em',
               padding: '3px 10px', borderRadius: 2, marginBottom: 12, textTransform: 'uppercase',
             }}>New</span>
-          )}
+          ) : null}
           <div style={{ fontSize: '0.8rem', color: seriesColor(book.series), fontWeight: 600, letterSpacing: '0.05em', marginBottom: 6 }}>
             {book.series}
           </div>
@@ -160,12 +183,16 @@ function HeroSection({ book }: { book: Book }) {
                 : book.description}
             </p>
           )}
-          {book.releaseDate && (
+          {(incoming || book.releaseDate) && (
             <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 16 }}>
-              {isComingSoon(book.releaseDate) ? (
-                <>Coming soon: <strong style={{ color: 'var(--accent-light)' }}>{formatReleaseDate(book.releaseDate)}</strong></>
+              {incoming ? (
+                book.releaseDate ? (
+                  <>Coming soon: <strong style={{ color: 'var(--accent-light)' }}>{formatReleaseDate(book.releaseDate)}</strong></>
+                ) : (
+                  <>Release date <strong style={{ color: 'var(--accent-light)' }}>TBA</strong></>
+                )
               ) : (
-                <>On sale: <strong style={{ color: 'var(--accent)' }}>{formatReleaseDate(book.releaseDate)}</strong></>
+                <>On sale: <strong style={{ color: 'var(--accent)' }}>{formatReleaseDate(book.releaseDate!)}</strong></>
               )}
             </p>
           )}
@@ -176,7 +203,7 @@ function HeroSection({ book }: { book: Book }) {
             }}>
               View Details
             </Link>
-            {amazonLinks.length > 1 ? (
+            {showAmazon && (amazonLinks.length > 1 ? (
               <AmazonBuyLinks
                 links={amazonLinks}
                 slug={slug}
@@ -198,7 +225,7 @@ function HeroSection({ book }: { book: Book }) {
               >
                 Buy on Amazon
               </TrackOutboundLink>
-            ) : null}
+            ) : null)}
           </div>
         </div>
         {book.cover?.asset?.url && (
@@ -218,10 +245,11 @@ function HeroSection({ book }: { book: Book }) {
 
 function BookCard({ book }: { book: Book }) {
   const slug = book.slug.current
+  const incoming = isIncoming(book)
   const accentColor = seriesColor(book.series)
   return (
-    <Link href={`/books/${slug}`} className="book-card-link">
-      <div className="book-card">
+    <Link href={`/books/${slug}`} className={`book-card-link${incoming ? ' book-card-link--incoming' : ''}`}>
+      <div className={`book-card${incoming ? ' book-card--incoming' : ''}`}>
         {book.cover?.asset?.url ? (
           <div style={{ position: 'relative', aspectRatio: '5/7', overflow: 'hidden' }}>
             <Image
@@ -231,13 +259,17 @@ function BookCard({ book }: { book: Book }) {
               style={{ objectFit: 'cover' }}
               sizes="(max-width: 600px) 50vw, 220px"
             />
-            {book.isNew && (
+            {incoming ? (
+              <span style={{ position: 'absolute', top: 8, left: 8 }}>
+                <IncomingBadge compact />
+              </span>
+            ) : book.isNew ? (
               <span style={{
                 position: 'absolute', top: 8, left: 8, background: 'var(--red)',
                 color: '#fff', fontSize: '0.65rem', fontWeight: 700,
                 letterSpacing: '0.1em', padding: '2px 8px', borderRadius: 2,
               }}>NEW</span>
-            )}
+            ) : null}
           </div>
         ) : (
           <div style={{ aspectRatio: '5/7', background: 'var(--surface2)' }} />
@@ -256,7 +288,7 @@ function BookCard({ book }: { book: Book }) {
           }}>
             {book.title}
           </p>
-          {book.releaseDate && <ReleaseDateLine releaseDate={book.releaseDate} />}
+          <ReleaseDateLine book={book} />
         </div>
       </div>
     </Link>

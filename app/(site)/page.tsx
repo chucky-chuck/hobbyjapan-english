@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { getAllBooks } from '@/sanity/queries'
+import { getAllBooks, getIncomingBooks } from '@/sanity/queries'
 import { CatalogView } from '@/components/CatalogView'
 
 export const metadata: Metadata = {
@@ -16,6 +16,6 @@ export const metadata: Metadata = {
 export const revalidate = 60
 
 export default async function HomePage() {
-  const books = await getAllBooks()
-  return <CatalogView books={books} activeSeries={null} />
+  const [books, incomingBooks] = await Promise.all([getAllBooks(), getIncomingBooks()])
+  return <CatalogView books={books} activeSeries={null} incomingBooks={incomingBooks} />
 }

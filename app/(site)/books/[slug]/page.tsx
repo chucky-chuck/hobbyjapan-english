@@ -2,12 +2,13 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { getAllBooks, getBook, getAdjacentBooks, getRelatedBooks } from '@/sanity/queries'
-import { formatReleaseDate, isComingSoon } from '@/lib/dates'
+import { formatReleaseDate, isIncoming } from '@/lib/dates'
 import { seriesColor, seriesPath } from '@/lib/series'
 import { getSiteUrl } from '@/lib/site'
 import { primaryAmazonUrl, resolveAmazonLinks } from '@/lib/amazon'
 import { TrackOutboundLink } from '@/components/TrackOutboundLink'
 import { AmazonBuyLinks } from '@/components/AmazonBuyLinks'
+import { IncomingBadge } from '@/components/IncomingBadge'
 
 export const revalidate = 60
 
@@ -56,6 +57,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
 
   const amazonLinks = resolveAmazonLinks(book.amazonLinks, book.amazonUrl)
   const amazonUrl = primaryAmazonUrl(book.amazonLinks, book.amazonUrl)
+  const incoming = isIncoming(book)
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -65,7 +67,14 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
     ...(book.description && { description: book.description }),
     ...(book.cover?.asset?.url && { image: book.cover.asset.url }),
     ...(book.releaseDate && { datePublished: book.releaseDate }),
-    ...(amazonUrl && { url: amazonUrl }),
+    ...(amazonUrl && !incoming && { url: amazonUrl }),
+    ...(incoming && book.releaseDate && {
+      offers: {
+        '@type': 'Offer',
+        availability: 'https://schema.org/PreOrder',
+        availabilityStarts: book.releaseDate,
+      },
+    }),
     author: { '@type': 'Organization', name: 'Hobby Japan' },
     publisher: { '@type': 'Organization', name: 'Hobby Japan' },
     bookFormat: 'https://schema.org/Paperback',
@@ -125,13 +134,22 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
             <div style={{ aspectRatio: '5/7', background: '#2e2e2e', borderRadius: 6 }} />
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 20 }}>
-            {amazonLinks.length > 0 && (
+            {!incoming && amazonLinks.length > 0 && (
               <AmazonBuyLinks
                 links={amazonLinks}
                 slug={slug}
                 series={book.series}
                 location="detail"
               />
+            )}
+            {incoming && (
+              <p className="incoming-detail-notice">
+                {book.releaseDate ? (
+                  <>Available <strong>{formatReleaseDate(book.releaseDate)}</strong></>
+                ) : (
+                  <>Coming soon — check back for the release date</>
+                )}
+              </p>
             )}
             {book.pdf?.asset?.url && (
               <TrackOutboundLink
@@ -165,7 +183,11 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
             {book.series}
           </span>
 
-          {book.isNew && (
+          {incoming ? (
+            <div style={{ alignSelf: 'flex-start' }}>
+              <IncomingBadge />
+            </div>
+          ) : book.isNew ? (
             <span style={{
               display: 'inline-block', background: '#c0392b', color: '#fff',
               fontSize: '0.7rem', fontWeight: 700, padding: '3px 10px',
@@ -173,7 +195,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
             }}>
               New Release
             </span>
-          )}
+          ) : null}
 
           <h1 style={{ fontSize: '1.8rem', fontWeight: 800, lineHeight: 1.25, color: '#fff' }}>
             {book.title}
@@ -187,12 +209,16 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
 
           <hr style={{ border: 'none', borderTop: '1px solid #3a3a3a' }} />
 
-          {book.releaseDate && (
+          {(incoming || book.releaseDate) && (
             <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-              {isComingSoon(book.releaseDate) ? (
-                <>Coming soon: <strong style={{ color: 'var(--accent-light)' }}>{formatReleaseDate(book.releaseDate)}</strong></>
+              {incoming ? (
+                book.releaseDate ? (
+                  <>Coming soon: <strong style={{ color: 'var(--accent-light)' }}>{formatReleaseDate(book.releaseDate)}</strong></>
+                ) : (
+                  <>Release date <strong style={{ color: 'var(--accent-light)' }}>TBA</strong></>
+                )
               ) : (
-                <>On sale: <strong style={{ color: 'var(--accent)' }}>{formatReleaseDate(book.releaseDate)}</strong></>
+                <>On sale: <strong style={{ color: 'var(--accent)' }}>{formatReleaseDate(book.releaseDate!)}</strong></>
               )}
             </p>
           )}
