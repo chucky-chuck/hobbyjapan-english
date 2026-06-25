@@ -6,11 +6,15 @@ export const bookSchema = defineType({
   type: 'document',
   fields: [
     defineField({
-      name: 'slug',
-      title: 'Slug',
-      type: 'slug',
-      options: { source: 'title', maxLength: 96 },
+      name: 'title',
+      title: 'Title',
+      type: 'string',
       validation: (r) => r.required(),
+    }),
+    defineField({
+      name: 'subtitle',
+      title: 'Subtitle',
+      type: 'string',
     }),
     defineField({
       name: 'series',
@@ -30,28 +34,12 @@ export const bookSchema = defineType({
       validation: (r) => r.required(),
     }),
     defineField({
-      name: 'title',
-      title: 'Title',
-      type: 'string',
+      name: 'slug',
+      title: 'Slug',
+      type: 'slug',
+      options: { source: 'title', maxLength: 96 },
       validation: (r) => r.required(),
-    }),
-    defineField({
-      name: 'subtitle',
-      title: 'Subtitle',
-      type: 'string',
-    }),
-    defineField({
-      name: 'isNew',
-      title: 'New Release',
-      type: 'boolean',
-      initialValue: false,
-    }),
-    defineField({
-      name: 'pinned',
-      title: 'Pin to Top',
-      type: 'boolean',
-      initialValue: false,
-      description: 'Show this book at the top of the page, above all others',
+      description: 'Click Generate after entering the title.',
     }),
     defineField({
       name: 'releaseDate',
@@ -67,10 +55,29 @@ export const bookSchema = defineType({
         'Show as an incoming title before release. Also set automatically when Release Date is in the future.',
     }),
     defineField({
+      name: 'isNew',
+      title: 'New Release',
+      type: 'boolean',
+      initialValue: false,
+    }),
+    defineField({
+      name: 'pinned',
+      title: 'Pin to Top',
+      type: 'boolean',
+      initialValue: false,
+      description: 'Show this book at the top of the page, above all others',
+    }),
+    defineField({
       name: 'cover',
       title: 'Cover Image',
       type: 'image',
       options: { hotspot: true },
+    }),
+    defineField({
+      name: 'description',
+      title: 'Description',
+      type: 'text',
+      rows: 6,
     }),
     defineField({
       name: 'amazonUrl',
@@ -123,12 +130,6 @@ export const bookSchema = defineType({
       title: 'PDF Preview',
       type: 'file',
       options: { accept: '.pdf' },
-    }),
-    defineField({
-      name: 'description',
-      title: 'Description',
-      type: 'text',
-      rows: 6,
     }),
     defineField({
       name: 'order',
