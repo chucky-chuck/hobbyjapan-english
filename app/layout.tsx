@@ -25,6 +25,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'HOBBY JAPAN English Publications',
     description: 'Official English publications from Hobby Japan — Gunpla, model kits, and hobby guides.',
+    images: ['/opengraph-image.png'],
   },
   robots: {
     index: true,
